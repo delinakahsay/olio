@@ -3,8 +3,44 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, ShoppingCart, Bot, User, Package, Heart, Star, CreditCard, Truck } from 'lucide-react';
 
+// Type definitions
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  originalPrice: number;
+  image: string;
+  rating: number;
+  reviews: number;
+  category: string;
+  keywords: string[];
+  description: string;
+  features: string[];
+}
+
+interface CartItem extends Product {
+  quantity: number;
+}
+
+interface Message {
+  id: number;
+  sender: 'user' | 'ai';
+  content: string;
+  timestamp: Date;
+  type?: 'text' | 'products' | 'cart';
+  products?: Product[];
+  cart?: CartItem[];
+}
+
+interface AIResponse {
+  type: 'text' | 'products' | 'cart';
+  content: string;
+  products?: Product[];
+  cart?: CartItem[];
+}
+
 // Product database
-const products = [
+const products: Product[] = [
   {
     id: 1,
     name: "Premium Wireless Headphones",
@@ -86,7 +122,12 @@ const products = [
 ];
 
 // AI responses and logic
-const getAIResponse = (message, products, cart, setCart) => {
+const getAIResponse = (
+  message: string, 
+  products: Product[], 
+  cart: CartItem[], 
+  setCart: React.Dispatch<React.SetStateAction<CartItem[]>>
+): AIResponse => {
   const lowerMessage = message.toLowerCase();
   
   // Greeting responses
@@ -123,7 +164,7 @@ const getAIResponse = (message, products, cart, setCart) => {
   }
   
   // Product search
-  let foundProducts = [];
+  let foundProducts: Product[] = [];
   
   // Search through all products
   products.forEach(product => {
@@ -186,8 +227,8 @@ const getAIResponse = (message, products, cart, setCart) => {
   };
 };
 
-export default function OlioAI() {
-  const [messages, setMessages] = useState([
+export default function OlioAI(): React.JSX.Element {
+  const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
       sender: 'ai',
@@ -195,12 +236,12 @@ export default function OlioAI() {
       timestamp: new Date()
     }
   ]);
-  const [inputMessage, setInputMessage] = useState('');
-  const [cart, setCart] = useState([]);
-  const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef(null);
+  const [inputMessage, setInputMessage] = useState<string>('');
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [isTyping, setIsTyping] = useState<boolean>(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = (): void => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -208,7 +249,7 @@ export default function OlioAI() {
     scrollToBottom();
   }, [messages]);
 
-  const addToCart = (product) => {
+  const addToCart = (product: Product): void => {
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) {
@@ -228,10 +269,10 @@ export default function OlioAI() {
     }]);
   };
 
-  const sendMessage = async () => {
+  const sendMessage = async (): Promise<void> => {
     if (!inputMessage.trim()) return;
 
-    const userMessage = {
+    const userMessage: Message = {
       id: Date.now(),
       sender: 'user',
       content: inputMessage,
@@ -246,7 +287,7 @@ export default function OlioAI() {
     setTimeout(() => {
       const aiResponse = getAIResponse(inputMessage, products, cart, setCart);
       
-      const aiMessage = {
+      const aiMessage: Message = {
         id: Date.now() + 1,
         sender: 'ai',
         content: aiResponse.content,
@@ -261,15 +302,15 @@ export default function OlioAI() {
     }, 1000);
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>): void => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
   };
 
-  const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const cartTotal: number = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const cartItemCount: number = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -427,7 +468,7 @@ export default function OlioAI() {
                   onKeyPress={handleKeyPress}
                   placeholder="Ask me anything about products, or say 'help' to see what I can do..."
                   className="w-full resize-none rounded-xl border border-gray-300 px-4 py-3 pr-12 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows="1"
+                  rows={1}
                 />
               </div>
               <button
